@@ -1,11 +1,9 @@
-
-var zmq = require('../')
+var zmq = require('..')
   , should = require('should');
 
-var n = 5;
+describe('socket.events', function(){
 
-while (n--) {
-  (function(n){
+  it('should support events', function(done){
     var rep = zmq.socket('rep')
       , req = zmq.socket('req');
 
@@ -15,15 +13,20 @@ while (n--) {
       rep.send('world');
     });
 
-    rep.bind('inproc://' + n, function(){
-      req.connect('inproc://' + n);
-      req.send('hello');
+    rep.bind('inproc://stuffevents', function (error) {
+      if (error) throw error;
+    });
+
+    rep.on('bind', function(){
+      req.connect('inproc://stuffevents');
       req.on('message', function(msg){
         msg.should.be.an.instanceof(Buffer);
         msg.toString().should.equal('world');
         req.close();
         rep.close();
+        done();
       });
+      req.send('hello');
     });
-  })(n);
-}
+  });
+});

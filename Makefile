@@ -1,27 +1,18 @@
 
-DOX = ./node_modules/.bin/dox
-JADE = ./node_modules/.bin/jade
-
-binding.node: build binding.cc
-	node-waf build
-
-build:
-	node-waf configure
+build/Release/binding.node: binding.cc binding.gyp
+	npm install
 
 test:
-	@./test/run
+	npm test
 
 clean:
-	node-waf clean
-
-docs:
-	$(DOX) < lib/index.js > docs/index.json
-	$(JADE) < docs/template.jade -o "{comments:$$(cat docs/index.json)}" > docs/index.html
-
-docclean:
-	rm -fr docs/index.{json,html}
+	rm -fr build node_modules
 
 distclean:
-	node-waf distclean
+	node-gyp clean
 
-.PHONY: clean distclean test docs docclean
+perf:
+	node perf/local_lat.js tcp://127.0.0.1:5555 1 100000& node perf/remote_lat.js tcp://127.0.0.1:5555 1 100000
+	node perf/local_thr.js tcp://127.0.0.1:5556 1 100000& node perf/remote_thr.js tcp://127.0.0.1:5556 1 100000
+
+.PHONY: test clean distclean perf
